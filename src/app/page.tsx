@@ -1,3 +1,5 @@
+"use client";
+
 import Header from "../components/Header";
 
 export default function HomePage() {
@@ -12,11 +14,6 @@ export default function HomePage() {
           Find the perfect host for your next event or become a host yourself!
         </p>
       </main>
-      <footer className="bg-black text-white py-4">
-        <div className="container mx-auto text-center">
-          &copy; 2023 Hosts Host. All rights reserved.
-        </div>
-      </footer>
     </div>
   );
 }
