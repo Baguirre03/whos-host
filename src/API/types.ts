@@ -6,14 +6,14 @@ export enum PartyStatus {
 
 // Base interfaces (without relations)
 export interface UserBase {
-  id: string;
   username: string;
+  password: string;
   name: string;
   description?: string | null;
   lattitude?: number | null;
   longitude?: number | null;
-  createdAt: string; // DateTime comes as string from API
-  updatedAt: string;
+  createdAt?: string; // DateTime comes as string from API
+  updatedAt?: string;
 }
 
 export interface PartyBase {
@@ -71,6 +71,7 @@ export interface UpdatePartyRequest {
 
 /**
  * 
+ * examples usages
 import { User, Party, CreatePartyRequest } from './types';
 
 // Get user

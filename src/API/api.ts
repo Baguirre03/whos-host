@@ -6,46 +6,47 @@ const API_CONFIG = {
 };
 
 async function fetchApi<T>(
-  PROD: boolean,
   method: HttpMethod,
   route: string,
   data?: object
 ): Promise<T> {
-  const baseUrl = PROD ? API_CONFIG.PROD : API_CONFIG.LOCAL;
+  const baseUrl =
+    process.env.PROD == "true" ? API_CONFIG.PROD : API_CONFIG.LOCAL;
   const URL = `${baseUrl}/${route}`;
-
   try {
     const response = await fetch(URL, {
       mode: "cors",
       method: method,
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("jwt"),
+        "Content-type": "application/json; charset=UTF-8",
+      },
+      // if data is provided, add it to the request
       ...(data && {
         body: JSON.stringify(data),
-        headers: { "Content-type": "application/json; charset=UTF-8" },
       }),
     });
-    if (!response.ok) {
-      throw new Error(`Error code: ${response.status}`);
-    }
+
     return await response.json();
   } catch (err: unknown) {
     throw err;
   }
 }
 
-async function getter<T>(PROD: boolean, route: string): Promise<T> {
-  return fetchApi(PROD, "GET", route);
+async function getter<T>(route: string): Promise<T> {
+  return fetchApi("GET", route);
 }
 
-async function post<T>(PROD: boolean, route: string, data: object): Promise<T> {
-  return fetchApi(PROD, "POST", route, data);
+async function post<T>(route: string, data: object): Promise<T> {
+  return fetchApi("POST", route, data);
 }
 
-async function edit<T>(PROD: boolean, route: string, data: object): Promise<T> {
-  return fetchApi(PROD, "PUT", route, data);
+async function edit<T>(route: string, data: object): Promise<T> {
+  return fetchApi("PUT", route, data);
 }
 
-async function remove<T>(PROD: boolean, route: string): Promise<T> {
-  return fetchApi(PROD, "DELETE", route);
+async function remove<T>(route: string): Promise<T> {
+  return fetchApi("DELETE", route);
 }
 
 /**

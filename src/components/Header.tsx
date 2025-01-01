@@ -3,25 +3,38 @@
 import Link from "next/link";
 import SignupButton from "./SignupButton";
 import LoginButton from "./LoginButton";
-import { useEffect } from "react";
-import { post } from "API/api";
+import { useEffect, useState } from "react";
+import { getter, post } from "API/api";
+import { User, UserBase } from "API/types";
 
 const Header = () => {
+  const [tokenState, setToken] = useState<string | null>(null);
+
+  const handleLogin = async (credentials: {
+    username: string;
+    password: string;
+  }) => {
+    try {
+      const response = await post("auth/login", credentials);
+      const { accessToken } = response;
+      // Store the token
+      localStorage.setItem("jwt", accessToken);
+      setToken(accessToken);
+
+      // You might want to store user data in a global state management solution
+      // like Redux or Context
+    } catch (error) {
+      console.error("Login failed:", error);
+      // Handle login error (show message to user, etc.)
+    }
+  };
+
   useEffect(() => {
     const fetch = async () => {
-      const user: object = {
-        username: "post test",
-        name: "HELLO WORLD",
-        description: "this is a descriptions",
-        lattitude: 0,
-        longitude: 0,
-        password: "passsssword",
-      };
-
-      const data = await post(true, "users", user); // true means not prod, ROUTE, data
-      console.log(data, "found");
+      // practicing getting users
+      const users = await getter("users");
+      console.log(users);
     };
-
     fetch();
   }, []);
 
@@ -33,7 +46,7 @@ const Header = () => {
         </Link>
         <nav className="space-x-4">
           <SignupButton />
-          <LoginButton />
+          <LoginButton onLogin={handleLogin} />
         </nav>
       </div>
     </header>
