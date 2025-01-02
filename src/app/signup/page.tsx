@@ -1,9 +1,17 @@
 "use client";
 import Header from "../../components/Header";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { login, post } from "API/api";
 import { User, CreateUserRequest, ErrorResponse } from "API/types";
 import { useRouter } from "next/navigation";
+import {
+  useJsApiLoader,
+  StandaloneSearchBox,
+  Libraries,
+} from "@react-google-maps/api";
+
+const API_KEY = process.env.NEXT_PUBLIC_PLACES_API_KEY || "";
+const libraries: Libraries = ["places"];
 
 export default function SignupPage() {
   const router = useRouter();
@@ -13,6 +21,9 @@ export default function SignupPage() {
     confirmPassword: "",
     name: "",
     description: "",
+    lattitude: 0,
+    longitude: 0,
+    address: "",
   };
 
   const [user, setUser] = useState(userObject);
@@ -31,15 +42,16 @@ export default function SignupPage() {
         password: user.password,
         name: user.name,
         description: user.description || undefined,
-        lattitude: 0,
-        longitude: 0,
+        lattitude: user.lattitude,
+        longitude: user.longitude,
+        address: user.address,
         statusCode: 0,
       };
-
       const response = await post<User | ErrorResponse>(
         "users",
         createUserRequest
       );
+
       if (typeof response === "object" && "statusCode" in response) {
         setError("Username already exists");
       } else {
@@ -66,17 +78,36 @@ export default function SignupPage() {
     }));
   };
 
+  const searchBoxRef = useRef<google.maps.places.SearchBox>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { isLoaded } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: API_KEY,
+    libraries,
+  });
+
+  const handleOnPlacesChanged = () => {
+    const places = searchBoxRef.current?.getPlaces();
+    setUser((prev) => ({
+      ...prev,
+      address: places?.[0]?.formatted_address || "",
+      lattitude: places?.[0]?.geometry?.location?.lat() || 0,
+      longitude: places?.[0]?.geometry?.location?.lng() || 0,
+    }));
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-gray-100">
       <Header addLogin={true} />
-      <main className="flex-grow flex items-center justify-center">
-        <div className="max-w-md w-full px-6">
+      <main className="flex-grow flex items-center justify-center py-12">
+        <div className="max-w-2xl w-full mx-8">
           <h1 className="text-3xl font-bold mb-6 text-black text-center">
             Create an Account
           </h1>
           <form
             onSubmit={handleSignup}
-            className="space-y-4 bg-white p-8 rounded-lg shadow-md"
+            className="space-y-4 bg-white p-10 rounded-xl shadow-lg border border-gray-200"
           >
             <div>
               <label
@@ -114,6 +145,30 @@ export default function SignupPage() {
                 required
               />
             </div>
+            {isLoaded && (
+              <StandaloneSearchBox
+                onLoad={(ref) => (searchBoxRef.current = ref)}
+                onPlacesChanged={handleOnPlacesChanged}
+              >
+                <div>
+                  <label
+                    htmlFor="address"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Address <span className="text-red-500">*</span>
+                  </label>
+                  <p className="text-xs text-gray-500 mt-0.5">Your location</p>
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    ref={inputRef}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2"
+                    required
+                  />
+                </div>
+              </StandaloneSearchBox>
+            )}
             <div>
               <label
                 htmlFor="description"
@@ -175,7 +230,7 @@ export default function SignupPage() {
             )}
             <button
               type="submit"
-              className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded transition duration-300"
+              className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md"
             >
               Sign Up
             </button>

@@ -14,6 +14,7 @@ export interface UserBase {
   longitude?: number | null;
   createdAt?: string; // DateTime comes as string from API
   updatedAt?: string;
+  address?: string | null;
 }
 
 export interface PartyBase {
@@ -47,6 +48,7 @@ export interface CreateUserRequest {
   lattitude?: number;
   longitude?: number;
   statusCode?: number;
+  address?: string;
 }
 
 export interface UpdateUserRequest {
@@ -54,6 +56,7 @@ export interface UpdateUserRequest {
   description?: string;
   lattitude?: number;
   longitude?: number;
+  address?: string;
 }
 
 export interface CreatePartyRequest {
