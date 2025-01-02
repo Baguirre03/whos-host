@@ -46,6 +46,7 @@ export interface CreateUserRequest {
   description?: string;
   lattitude?: number;
   longitude?: number;
+  statusCode?: number;
 }
 
 export interface UpdateUserRequest {
@@ -69,8 +70,21 @@ export interface UpdatePartyRequest {
   status?: PartyStatus;
 }
 
+export interface LoginResponse {
+  accessToken: string;
+  user: User;
+  statusCode?: number;
+  message?: string;
+}
+
+export interface ErrorResponse {
+  statusCode: number;
+  message: string;
+  errors?: string[];
+}
+
 /**
- * 
+ *
  * examples usages
 import { User, Party, CreatePartyRequest } from './types';
 

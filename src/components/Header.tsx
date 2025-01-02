@@ -3,31 +3,11 @@
 import Link from "next/link";
 import SignupButton from "./SignupButton";
 import LoginButton from "./LoginButton";
-import { useEffect, useState } from "react";
-import { getter, post } from "API/api";
-import { User, UserBase } from "API/types";
-
-const Header = () => {
-  const [tokenState, setToken] = useState<string | null>(null);
-
-  const handleLogin = async (credentials: {
-    username: string;
-    password: string;
-  }) => {
-    try {
-      const response = await post("auth/login", credentials);
-      const { accessToken } = response;
-      // Store the token
-      localStorage.setItem("jwt", accessToken);
-      setToken(accessToken);
-
-      // You might want to store user data in a global state management solution
-      // like Redux or Context
-    } catch (error) {
-      console.error("Login failed:", error);
-      // Handle login error (show message to user, etc.)
-    }
-  };
+import { useEffect } from "react";
+import { getter } from "API/api";
+const Header = ({ addLogin = true }: { addLogin: boolean }) => {
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
 
   useEffect(() => {
     const fetch = async () => {
@@ -38,16 +18,34 @@ const Header = () => {
     fetch();
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("jwt");
+    localStorage.removeItem("user");
+    window.location.reload();
+  };
+
   return (
     <header className="bg-black text-white p-4">
       <div className="container mx-auto flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold">
           Hosts Host
         </Link>
-        <nav className="space-x-4">
-          <SignupButton />
-          <LoginButton onLogin={handleLogin} />
-        </nav>
+        {user ? (
+          <div className="flex items-center space-x-4">
+            <p>Hello, {user.username}</p>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <nav className="space-x-4">
+            <SignupButton />
+            {addLogin && <LoginButton />}
+          </nav>
+        )}
       </div>
     </header>
   );

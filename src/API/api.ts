@@ -1,3 +1,5 @@
+import { LoginResponse } from "./types";
+
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 const API_CONFIG = {
@@ -13,6 +15,7 @@ async function fetchApi<T>(
   const baseUrl =
     process.env.PROD == "true" ? API_CONFIG.PROD : API_CONFIG.LOCAL;
   const URL = `${baseUrl}/${route}`;
+
   try {
     const response = await fetch(URL, {
       mode: "cors",
@@ -30,6 +33,26 @@ async function fetchApi<T>(
     return await response.json();
   } catch (err: unknown) {
     throw err;
+  }
+}
+
+async function login(username: string, password: string) {
+  try {
+    const response = await post<LoginResponse>("auth/login", {
+      username,
+      password,
+    });
+    const { accessToken } = response;
+    if (response.statusCode) {
+      return [false, response.message];
+    } else {
+      localStorage.setItem("jwt", accessToken);
+      localStorage.setItem("user", JSON.stringify(response.user));
+      return [true];
+    }
+  } catch (error) {
+    console.error(error);
+    return [false];
   }
 }
 
@@ -63,4 +86,4 @@ async function remove<T>(route: string): Promise<T> {
  *
  */
 
-export { getter, post, edit, remove };
+export { getter, post, edit, remove, login };
