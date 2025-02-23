@@ -47,6 +47,7 @@ export default function SignupPage() {
         address: user.address,
         statusCode: 0,
       };
+
       const response = await post<User | ErrorResponse>(
         "users",
         createUserRequest
@@ -65,8 +66,7 @@ export default function SignupPage() {
         }
       }
     } catch (error) {
-      console.error("Signup failed:", error);
-      setError("An error occurred during signup");
+      setError(`${error}`);
     }
   };
 

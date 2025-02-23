@@ -4,6 +4,12 @@ export enum PartyStatus {
   COMPLETED = "COMPLETED",
 }
 
+export enum HostType {
+  CLOSEST = "CLOSEST",
+  RANDOM = "RANDOM",
+  CHOOSE = "CHOOSE",
+}
+
 // Base interfaces (without relations)
 export interface UserBase {
   username: string;
@@ -12,30 +18,33 @@ export interface UserBase {
   description?: string | null;
   lattitude?: number | null;
   longitude?: number | null;
-  createdAt?: string; // DateTime comes as string from API
-  updatedAt?: string;
+  createdAt?: Date; // DateTime comes as string from API
+  updatedAt?: Date;
   address?: string | null;
 }
 
 export interface PartyBase {
-  id: string;
+  id?: string;
   name: string;
   description?: string | null;
-  time: string; // DateTime comes as string from API
-  createdAt: string;
-  updatedAt: string;
+  time: Date; // DateTime comes as string from API
+  createdAt?: string;
+  updatedAt?: string;
   hostId: string;
   status?: PartyStatus;
 }
 
 // Extended interfaces (with relations)
 export interface Party extends PartyBase {
+  adminId: string;
+  hostType: HostType;
   host: UserBase;
   members: UserBase[];
 }
 
 export interface User extends UserBase {
   hostedParties: PartyBase[];
+  partiesAdmin: PartyBase[];
   parties: PartyBase[];
 }
 

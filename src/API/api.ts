@@ -3,7 +3,7 @@ import { LoginResponse } from "./types";
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 const API_CONFIG = {
-  PROD: "PROD URL",
+  PROD: process.env.PROD_URL,
   LOCAL: "http://localhost:3001",
 };
 
@@ -29,14 +29,16 @@ async function fetchApi<T>(
         body: JSON.stringify(data),
       }),
     });
-
     return await response.json();
   } catch (err: unknown) {
     throw err;
   }
 }
 
-async function login(username: string, password: string) {
+async function login(
+  username: string,
+  password: string
+): Promise<[boolean, string?]> {
   try {
     const response = await post<LoginResponse>("auth/login", {
       username,
@@ -51,8 +53,7 @@ async function login(username: string, password: string) {
       return [true];
     }
   } catch (error) {
-    console.error(error);
-    return [false];
+    return [false, error as string];
   }
 }
 

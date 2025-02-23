@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import SignupButton from "./SignupButton";
 import LoginButton from "./LoginButton";
 
-const Header = ({ addLogin = true }: { addLogin: boolean }) => {
+const Header = ({ addLogin }: { addLogin: boolean }) => {
   const [user, setUser] = useState<{ username: string } | null>(null);
 
   useEffect(() => {
@@ -19,6 +19,7 @@ const Header = ({ addLogin = true }: { addLogin: boolean }) => {
     localStorage.removeItem("jwt");
     localStorage.removeItem("user");
     setUser(null);
+    window.location.reload();
   };
 
   return (
