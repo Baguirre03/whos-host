@@ -1,3 +1,3 @@
-export default function Login() {
-  return <div>Heloworlds</div>;
+export default function PartyPage() {
+  return <p>Welcome to the party hub!</p>;
 }
