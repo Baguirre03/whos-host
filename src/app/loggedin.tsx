@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { User, PartyBase, Party } from "API/types";
+import { User, PartyBase } from "API/types";
 import { getter } from "API/api";
 
 function removeDuplicates(

@@ -38,7 +38,9 @@ export default function AddUserPage() {
       setSearchTerm("");
       setUsers([]);
     } catch (err) {
-      setError("Failed to add user. They might already be in the party.");
+      setError(
+        "Failed to add user. They might already be in the party." + `: ${err}`
+      );
     } finally {
       setIsLoading(false);
     }
