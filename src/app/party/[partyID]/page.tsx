@@ -16,7 +16,8 @@ export default function PartyPage() {
 
     async function fetchParty() {
       try {
-        const data = await getter(`parties/${partyID}`);
+        const data = await getter<Party>(`parties/${partyID}`);
+        console.log(data);
         setParty(data);
       } catch (error) {
         console.error("Failed to fetch party:", error);
@@ -70,29 +71,73 @@ export default function PartyPage() {
             {new Date(party.time).toLocaleString() || "Not scheduled"}
           </p>
         </div>
-
-        <div className="mt-4 border-t pt-4 flex items-center space-x-4">
-          <div className="w-12 h-12 bg-blue-500 text-white flex items-center justify-center rounded-full text-lg font-bold">
-            {party.host.username.charAt(0).toUpperCase()}
+        {party.host ? (
+          <div className="mt-4 border-t pt-4 flex items-center space-x-4">
+            <div className="w-12 h-12 bg-blue-500 text-white flex items-center justify-center rounded-full text-lg font-bold">
+              {party.host.username.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-700">Host</h3>
+              <p className="text-gray-600">
+                {party.host.name} ({party.host.username})
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700">Host</h3>
-            <p className="text-gray-600">
-              {party.host.name} ({party.host.username})
-            </p>
+        ) : (
+          <div className="mt-4 border-t pt-4 flex items-center space-x-4">
+            <div className="w-12 h-12 bg-blue-500 text-white flex items-center justify-center rounded-full text-lg font-bold">
+              No Host Found
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-700">Host</h3>
+              <p className="text-gray-600">No Host Found</p>
+            </div>
           </div>
-        </div>
+        )}
 
         <p className="mt-6 text-sm text-gray-400">
-          Created at: {new Date(party.createdAt).toLocaleString()}
+          Created at:{" "}
+          {party.createdAt
+            ? new Date(party.createdAt).toLocaleString()
+            : "Not available"}
         </p>
+
+        <div className="mt-6 border-t pt-4">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Members</h2>
+          {party.members && party.members.length > 0 ? (
+            <div className="grid gap-3">
+              {party.members.map((member) => (
+                <div
+                  key={member.username}
+                  className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="w-10 h-10 bg-indigo-500 text-white flex items-center justify-center rounded-full text-lg font-bold">
+                    {member.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800">{member.name}</p>
+                    <p className="text-sm text-gray-500">@{member.username}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">
+              No members have joined this party yet.
+            </p>
+          )}
+        </div>
 
         {/* Show Edit and Add Users buttons if the current user is the host */}
         {isHost && (
           <div className="mt-6 flex space-x-4">
-            <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition">
-              Edit Party
-            </button>
+            <Link href={`/party/${partyID}/edit`}>
+              {" "}
+              <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+                Edit Party
+              </button>
+            </Link>
+
             <Link href={`/party/${partyID}/add-user`}>
               <button className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition">
                 Add Users

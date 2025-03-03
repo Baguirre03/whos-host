@@ -1,6 +1,6 @@
 import { LoginResponse } from "./types";
 
-type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
 
 const API_CONFIG = {
   PROD: process.env.PROD_URL,
@@ -66,7 +66,7 @@ async function post<T>(route: string, data: object): Promise<T> {
 }
 
 async function edit<T>(route: string, data: object): Promise<T> {
-  return fetchApi("PUT", route, data);
+  return fetchApi("PATCH", route, data);
 }
 
 async function remove<T>(route: string): Promise<T> {
