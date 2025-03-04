@@ -15,7 +15,6 @@ function removeDuplicates(
   [...arrOne, ...arrTwo, ...arrThree].forEach((party) => {
     if (!uniqueParties.has(party.id!)) uniqueParties.set(party.id!, party);
   });
-  console.log(uniqueParties);
   return Array.from(uniqueParties.values());
 }
 
@@ -34,7 +33,6 @@ export default function LoggedInPage() {
 
         const userData = JSON.parse(userStr);
         const freshUserData = await getter<User>(`users/${userData.id}`);
-        console.log(freshUserData);
         setUser(freshUserData);
         setParties(freshUserData.parties || []);
         setPartiesAdmin(freshUserData.partiesAdmin || []);

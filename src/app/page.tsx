@@ -5,7 +5,7 @@ import LoggedInPage from "./loggedin";
 import LoggedOutPage from "./loggedout";
 
 export default function HomePage() {
-  const loggedIn = localStorage.getItem("user");
+  const loggedIn = localStorage.getItem("user") || null;
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header addLogin={true} />

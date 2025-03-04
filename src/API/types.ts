@@ -12,6 +12,7 @@ export enum HostType {
 
 // Base interfaces (without relations)
 export interface UserBase {
+  id?: string;
   username: string;
   password: string;
   name: string;

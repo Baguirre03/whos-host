@@ -1,7 +1,7 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { post, getter } from "API/api";
+import { edit, getter } from "API/api";
 import { UserBase } from "API/types";
 import debounce from "lodash/debounce";
 
@@ -28,12 +28,11 @@ export default function AddUserPage() {
     searchUsers(e.target.value);
   };
 
-  const handleAddUser = async (userId: string) => {
-    // IMPLEMENT THIS
+  const handleAddUser = async (userID: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      await post(`parties/${partyID}/members`, { userId });
+      await edit(`parties/${partyID}/members`, { id: userID });
       setSuccess("User added successfully!");
       setSearchTerm("");
       setUsers([]);
@@ -78,7 +77,7 @@ export default function AddUserPage() {
             <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
               {users.map((user) => (
                 <div
-                  key={user.username}
+                  key={user.id}
                   className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg border border-gray-200"
                 >
                   <div className="flex items-center space-x-3">
@@ -91,8 +90,8 @@ export default function AddUserPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => handleAddUser(user.username)}
-                    disabled={isLoading}
+                    onClick={() => user.id && handleAddUser(user.id)}
+                    disabled={isLoading || !user.id}
                     className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 font-medium text-sm"
                   >
                     Add

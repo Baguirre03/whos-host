@@ -10,12 +10,16 @@ export default function EditParty() {
   const { partyID } = useParams();
   const [error, setError] = useState<string | null>(null);
   const [party, setParty] = useState<Party | null>(null);
+  const [hostType, setHostType] = useState<HostType>(
+    party?.hostType || HostType.CLOSEST
+  );
 
   useEffect(() => {
     async function fetchParty() {
       try {
         const data = await getter<Party>(`parties/${partyID}`);
         setParty(data);
+        setHostType(data.hostType);
       } catch (error) {
         console.error("Failed to fetch party:", error);
         setError("Failed to load party details");
@@ -34,15 +38,14 @@ export default function EditParty() {
     const updatedParty = {
       name: formData.get("partyName") as string,
       time: new Date(formData.get("date") as string),
+      updateAt: new Date(),
       description: formData.get("description") as string,
       hostType: formData.get("hostType") as HostType,
+      hostId: formData.get("hostId") as string,
     };
 
     try {
-      console.log(partyID);
       const response = await edit<Party>(`parties/${partyID}`, updatedParty);
-
-      console.log(response);
       if (response) {
         router.push(`/party/${partyID}`);
       }
@@ -101,6 +104,7 @@ export default function EditParty() {
               id="hostType"
               name="hostType"
               defaultValue={party.hostType}
+              onChange={(e) => setHostType(e.target.value as HostType)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             >
               <option value="CLOSEST">Closest</option>
@@ -108,6 +112,30 @@ export default function EditParty() {
               <option value="CHOOSE">Choose</option>
             </select>
           </div>
+
+          {hostType === "CHOOSE" && (
+            <div className="mb-4">
+              <label
+                htmlFor="hostId"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Select Host:
+              </label>
+              <select
+                id="hostId"
+                name="hostId"
+                defaultValue={party.hostId}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                {party.members.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.name} (@{member.username})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="mb-4">
             <label
               htmlFor="description"
