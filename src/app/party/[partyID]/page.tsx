@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { getter } from "API/api";
 import { Party, User } from "API/types";
 import Link from "next/link";
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
+import { useGoogleMapsApi } from "../../utils/googleMapsConfig";
+import { GoogleMap, Marker } from "@react-google-maps/api";
 
 export default function PartyPage() {
   const { partyID } = useParams();
@@ -13,11 +14,7 @@ export default function PartyPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: process.env.NEXT_PUBLIC_PLACES_API_KEY || "",
-  });
-
+  const { isLoaded } = useGoogleMapsApi();
   useEffect(() => {
     if (!partyID) return;
 
