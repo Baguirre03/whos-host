@@ -1,28 +1,43 @@
 "use client";
 
+import type React from "react";
+
 import { edit, getter } from "API/api";
-import { HostType, Party } from "API/types";
+import type { HostType, Party } from "API/types";
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import {
+  AlertCircle,
+  Calendar,
+  Edit,
+  Info,
+  PartyPopper,
+  Users,
+  X,
+} from "lucide-react";
+import Header from "components/Header";
 
 export default function EditParty() {
   const router = useRouter();
   const { partyID } = useParams();
   const [error, setError] = useState<string | null>(null);
   const [party, setParty] = useState<Party | null>(null);
-  const [hostType, setHostType] = useState<HostType>(
-    party?.hostType || HostType.CLOSEST
-  );
+  const [hostType, setHostType] = useState<HostType | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchParty() {
+      setIsLoading(true);
       try {
         const data = await getter<Party>(`parties/${partyID}`);
         setParty(data);
         setHostType(data.hostType);
+        setIsLoading(false);
       } catch (error) {
         console.error("Failed to fetch party:", error);
         setError("Failed to load party details");
+        setIsLoading(false);
       }
     }
 
@@ -33,143 +48,260 @@ export default function EditParty() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    const formData = new FormData(event.target as HTMLFormElement);
-
-    const updatedParty = {
-      name: formData.get("partyName") as string,
-      time: new Date(formData.get("date") as string),
-      updateAt: new Date(),
-      description: formData.get("description") as string,
-      hostType: formData.get("hostType") as HostType,
-      hostId: formData.get("hostId") as string,
-    };
+    setIsSubmitting(true);
 
     try {
-      const response = await edit<Party>(`parties/${partyID}`, updatedParty);
+      const formData = new FormData(event.target as HTMLFormElement);
+
+      // Get date and time values
+      const dateValue = formData.get("date") as string;
+      const timeValue = formData.get("time") as string;
+
+      // Combine date and time if both are provided
+      let dateTime;
+      if (timeValue) {
+        dateTime = new Date(`${dateValue}T${timeValue}`);
+      } else {
+        dateTime = new Date(dateValue);
+      }
+
+      const updatedParty = {
+        name: formData.get("partyName") as string,
+        time: dateTime,
+        updateAt: new Date(),
+        description: formData.get("description") as string,
+        hostType: formData.get("hostType") as HostType,
+        hostId: formData.get("hostId") as string,
+      };
+
+      const response = await edit<Party | null>(
+        `parties/${partyID}`,
+        updatedParty
+      );
       if (response) {
         router.push(`/party/${partyID}`);
       }
     } catch (error) {
-      setError("Error updating party" + `: ${error}`);
+      setError(`Error updating party: ${error}`);
+      setIsSubmitting(false);
     }
   };
 
-  if (!party) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin mb-4">
+            <PartyPopper className="h-8 w-8 text-pink-500" />
+          </div>
+          <p className="text-gray-300">Loading party details...</p>
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md m-4">
-        <h1 className="text-2xl font-bold mb-6 text-center">Edit Party</h1>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label
-              htmlFor="partyName"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Party Name:
-            </label>
-            <input
-              type="text"
-              id="partyName"
-              name="partyName"
-              defaultValue={party.name}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          <div className="mb-4">
-            <label
-              htmlFor="date"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Date:
-            </label>
-            <input
-              type="date"
-              id="date"
-              name="date"
-              defaultValue={new Date(party.time).toISOString().split("T")[0]}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          <div className="mb-4">
-            <label
-              htmlFor="hostType"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Host Type:
-            </label>
-            <select
-              id="hostType"
-              name="hostType"
-              defaultValue={party.hostType}
-              onChange={(e) => setHostType(e.target.value as HostType)}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            >
-              <option value="CLOSEST">Closest</option>
-              <option value="RANDOM">Random</option>
-              <option value="CHOOSE">Choose</option>
-            </select>
-          </div>
-
-          {hostType === "CHOOSE" && (
-            <div className="mb-4">
-              <label
-                htmlFor="hostId"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Select Host:
-              </label>
-              <select
-                id="hostId"
-                name="hostId"
-                defaultValue={party.hostId}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              >
-                {party.members.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.name} (@{member.username})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div className="mb-4">
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Description:
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              defaultValue={party.description || ""}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            ></textarea>
-          </div>
-          <div className="flex space-x-4">
-            <button
-              type="submit"
-              className="flex-1 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Save Changes
-            </button>
-            <button
-              type="button"
-              onClick={() => router.back()}
-              className="flex-1 py-2 px-4 bg-gray-200 text-gray-800 font-semibold rounded-md shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-        {error && (
-          <div className="mt-4 text-red-500 text-sm text-center">{error}</div>
-        )}
+  if (!party) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-700 text-center">
+          <AlertCircle className="h-12 w-12 text-pink-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Party Not Found</h2>
+          <p className="text-gray-300 mb-6">
+            We couldn't find the party you're looking for.
+          </p>
+          <button
+            onClick={() => router.push("/")}
+            className="bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-bold py-2 px-6 rounded-lg transition duration-300"
+          >
+            Go Back Home
+          </button>
+        </div>
       </div>
-    </div>
+    );
+  }
+
+  // Format the date for the input field
+  const formattedDate = new Date(party.time).toISOString().split("T")[0];
+
+  // Extract time for the time input field
+  const hours = new Date(party.time).getHours().toString().padStart(2, "0");
+  const minutes = new Date(party.time).getMinutes().toString().padStart(2, "0");
+  const formattedTime = `${hours}:${minutes}`;
+
+  return (
+    <>
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md relative">
+          {/* Decorative elements */}
+          <div className="absolute -top-10 -left-10 w-20 h-20 rounded-full bg-gradient-to-r from-pink-500/20 to-violet-500/20 blur-xl"></div>
+          <div className="absolute -bottom-10 -right-10 w-20 h-20 rounded-full bg-gradient-to-r from-violet-500/20 to-pink-500/20 blur-xl"></div>
+
+          <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 overflow-hidden">
+            {/* Top gradient line */}
+            <div className="h-1 bg-gradient-to-r from-pink-500 to-violet-500"></div>
+
+            <div className="p-8">
+              <h1 className="text-2xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 flex items-center justify-center gap-2">
+                <Edit className="h-6 w-6" />
+                Edit Party
+              </h1>
+
+              {error && (
+                <div className="mb-6 text-pink-400 text-sm bg-pink-900/30 p-3 rounded-lg border border-pink-800/50 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label
+                    htmlFor="partyName"
+                    className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                  >
+                    <PartyPopper className="h-4 w-4 text-pink-400" />
+                    Party Name
+                  </label>
+                  <input
+                    type="text"
+                    id="partyName"
+                    name="partyName"
+                    defaultValue={party.name}
+                    required
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-pink-500 focus:ring-pink-500 px-3 py-2"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="date"
+                      className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                    >
+                      <Calendar className="h-4 w-4 text-pink-400" />
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      id="date"
+                      name="date"
+                      defaultValue={formattedDate}
+                      required
+                      className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-pink-500 focus:ring-pink-500 px-3 py-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="time"
+                      className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                    >
+                      <Calendar className="h-4 w-4 text-pink-400" />
+                      Time
+                    </label>
+                    <input
+                      type="time"
+                      id="time"
+                      name="time"
+                      defaultValue={formattedTime}
+                      className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-pink-500 focus:ring-pink-500 px-3 py-2"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="hostType"
+                    className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                  >
+                    <Users className="h-4 w-4 text-pink-400" />
+                    Host Selection Method
+                  </label>
+                  <select
+                    id="hostType"
+                    name="hostType"
+                    defaultValue={party.hostType}
+                    onChange={(e) => setHostType(e.target.value as HostType)}
+                    required
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-pink-500 focus:ring-pink-500 px-3 py-2"
+                  >
+                    <option value="CLOSEST">Closest (by location)</option>
+                    <option value="RANDOM">Random Selection</option>
+                    <option value="CHOOSE">Manual Selection</option>
+                  </select>
+                </div>
+
+                {hostType === "CHOOSE" && (
+                  <div>
+                    <label
+                      htmlFor="hostId"
+                      className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                    >
+                      <Users className="h-4 w-4 text-pink-400" />
+                      Select Host
+                    </label>
+                    <select
+                      id="hostId"
+                      name="hostId"
+                      defaultValue={party.hostId}
+                      className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-pink-500 focus:ring-pink-500 px-3 py-2"
+                    >
+                      {party.members.map((member) => (
+                        <option key={member.id} value={member.id}>
+                          {member.name} (@{member.username})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                  >
+                    <Info className="h-4 w-4 text-pink-400" />
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    defaultValue={party.description || ""}
+                    rows={4}
+                    className="mt-1 block w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-pink-500 focus:ring-pink-500 px-3 py-2"
+                  ></textarea>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>Save Changes</>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 border border-gray-600 flex items-center justify-center gap-2"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

@@ -150,8 +150,8 @@ export default function LoggedInPage() {
                       <div className="flex items-center text-gray-400 text-sm mt-auto">
                         <Calendar className="w-4 h-4 mr-1" />
                         <span>
-                          {party.date
-                            ? new Date(party.date).toLocaleDateString()
+                          {party.time
+                            ? new Date(party.time).toLocaleDateString()
                             : "Date not set"}
                         </span>
                       </div>
