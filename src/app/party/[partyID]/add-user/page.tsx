@@ -15,13 +15,16 @@ import {
   User,
   Users,
 } from "lucide-react";
-import Header from "components/Header";
+
+interface SearchedUser extends UserBase {
+  isMember?: boolean;
+}
 
 export default function AddUserPage() {
   const { partyID } = useParams();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState<UserBase[]>([]);
+  const [users, setUsers] = useState<SearchedUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +41,9 @@ export default function AddUserPage() {
       }
 
       try {
-        const results = await getter<UserBase[]>(`users/search?q=${query}`);
+        const results = await getter<SearchedUser[]>(
+          `users/${partyID}/search?q=${query}`
+        );
         setUsers(results);
       } catch (err) {
         console.error("Failed to search users:", err);
@@ -75,8 +80,13 @@ export default function AddUserPage() {
     try {
       await edit(`parties/${partyID}/members`, { id: userID });
       setSuccess(`${userName} added successfully!`);
-      // Remove the added user from the list
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userID));
+
+      // Update the user in the list to show as a member
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userID ? { ...user, isMember: true } : user
+        )
+      );
     } catch (err) {
       setError("Failed to add user. They might already be in the party.");
       console.error("Error adding user:", err);
@@ -133,7 +143,7 @@ export default function AddUserPage() {
                 <div>
                   <label
                     htmlFor="search"
-                    className="block text-sm font-medium text-gray-200 flex items-center gap-1.5 mb-2"
+                    className=" text-sm font-medium text-gray-200 flex items-center gap-1.5 mb-2"
                   >
                     <Search className="h-4 w-4 text-pink-400" />
                     Search Users
@@ -184,16 +194,24 @@ export default function AddUserPage() {
                                 </p>
                               </div>
                             </div>
-                            <button
-                              onClick={() =>
-                                user.id && handleAddUser(user.id, user.name)
-                              }
-                              disabled={isLoading}
-                              className="px-3 py-1.5 bg-gray-700 text-pink-400 rounded-full hover:bg-gray-600 font-medium text-sm border border-gray-600 transition-all duration-200 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Plus className="h-3.5 w-3.5" />
-                              Add
-                            </button>
+
+                            {user.isMember ? (
+                              <div className="px-3 py-1.5 bg-gray-700/50 text-gray-400 rounded-full text-sm border border-gray-600 flex items-center gap-1">
+                                <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+                                <span>Member</span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() =>
+                                  user.id && handleAddUser(user.id, user.name)
+                                }
+                                disabled={isLoading}
+                                className="px-3 py-1.5 bg-gray-700 text-pink-400 rounded-full hover:bg-gray-600 font-medium text-sm border border-gray-600 transition-all duration-200 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                Add
+                              </button>
+                            )}
                           </div>
                         );
                       })}

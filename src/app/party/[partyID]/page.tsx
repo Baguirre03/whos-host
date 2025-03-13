@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getter } from "API/api";
 import type { Party, User } from "API/types";
 import Link from "next/link";

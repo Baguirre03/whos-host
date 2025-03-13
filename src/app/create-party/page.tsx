@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 import Header from "components/Header";
 import { post } from "../../API/api";
 import type { HostType, Party } from "API/types";
@@ -93,7 +91,7 @@ export default function CreateParty() {
                 <div>
                   <label
                     htmlFor="partyName"
-                    className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                    className=" text-sm font-medium text-gray-200 flex items-center gap-1.5"
                   >
                     <PartyPopper className="h-4 w-4 text-pink-400" />
                     Party Name
@@ -115,7 +113,7 @@ export default function CreateParty() {
                   <div>
                     <label
                       htmlFor="date"
-                      className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                      className=" text-sm font-medium text-gray-200 flex items-center gap-1.5"
                     >
                       <Calendar className="h-4 w-4 text-pink-400" />
                       Date
@@ -132,7 +130,7 @@ export default function CreateParty() {
                   <div>
                     <label
                       htmlFor="time"
-                      className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                      className=" text-sm font-medium text-gray-200 flex items-center gap-1.5"
                     >
                       <Clock className="h-4 w-4 text-pink-400" />
                       Time
@@ -150,7 +148,7 @@ export default function CreateParty() {
                 <div>
                   <label
                     htmlFor="hostType"
-                    className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                    className=" text-sm font-medium text-gray-200 flex items-center gap-1.5"
                   >
                     <Users className="h-4 w-4 text-pink-400" />
                     Host Selection Method
@@ -173,7 +171,7 @@ export default function CreateParty() {
                 <div>
                   <label
                     htmlFor="description"
-                    className="block text-sm font-medium text-gray-200 flex items-center gap-1.5"
+                    className=" text-sm font-medium text-gray-200 flex items-center gap-1.5"
                   >
                     <Info className="h-4 w-4 text-pink-400" />
                     Description
@@ -210,8 +208,8 @@ export default function CreateParty() {
               </form>
 
               <p className="text-center text-gray-400 text-sm mt-6">
-                After creating your party, you'll be able to invite friends and
-                assign roles.
+                After creating your party, you&apos;ll be able to invite friends
+                and assign roles.
               </p>
             </div>
           </div>

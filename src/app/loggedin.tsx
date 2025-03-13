@@ -7,6 +7,13 @@ import { getter } from "API/api";
 import { Calendar, Crown, Music, PartyPopper, Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, SortAsc } from "lucide-react";
 
 function removeDuplicates(
   arrOne: PartyBase[],
@@ -20,12 +27,15 @@ function removeDuplicates(
   return Array.from(uniqueParties.values());
 }
 
+type SortOption = "date-closest" | "date-oldest" | "type";
+
 export default function LoggedInPage() {
   const [parties, setParties] = useState<PartyBase[]>([]);
   const [partiesAdmin, setPartiesAdmin] = useState<PartyBase[]>([]);
   const [partiesHost, setPartiesHost] = useState<PartyBase[]>([]);
-  const [user, setUser] = useState<User | null>(null);
+  // const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState<SortOption>("date-closest");
 
   useEffect(() => {
     async function fetchUserData() {
@@ -35,7 +45,7 @@ export default function LoggedInPage() {
 
         const userData = JSON.parse(userStr);
         const freshUserData = await getter<User>(`users/${userData.id}`);
-        setUser(freshUserData);
+        // setUser(freshUserData);
         setParties(freshUserData.parties || []);
         setPartiesAdmin(freshUserData.partiesAdmin || []);
         setPartiesHost(freshUserData.hostedParties || []);
@@ -58,6 +68,40 @@ export default function LoggedInPage() {
   }
 
   const allParties = removeDuplicates(partiesAdmin, partiesHost, parties);
+
+  // Sort parties based on the selected option
+  const sortedParties = [...allParties].sort((a, b) => {
+    switch (sortOption) {
+      case "date-closest":
+        return (
+          new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime()
+        );
+      case "date-oldest":
+        return (
+          new Date(a.time || 0).getTime() - new Date(b.time || 0).getTime()
+        );
+      case "type":
+        // First sort by admin status
+        const aIsAdmin = partiesAdmin.some((p) => p.id === a.id);
+        const bIsAdmin = partiesAdmin.some((p) => p.id === b.id);
+        if (aIsAdmin && !bIsAdmin) return -1;
+        if (!aIsAdmin && bIsAdmin) return 1;
+
+        // Then by host status
+        const aIsHost = partiesHost.some((p) => p.id === a.id);
+        const bIsHost = partiesHost.some((p) => p.id === b.id);
+        if (aIsHost && !bIsHost) return -1;
+        if (!aIsHost && bIsHost) return 1;
+
+        // Default to date sorting if both have the same status
+        return (
+          new Date(b.time || 0).getTime() - new Date(a.time || 0).getTime()
+        );
+      default:
+        return 0;
+    }
+  });
+
   const getRandomGradient = () => {
     const gradients = [
       "from-purple-500 to-pink-500",
@@ -71,25 +115,70 @@ export default function LoggedInPage() {
     return gradients[Math.floor(Math.random() * gradients.length)];
   };
 
+  // Get the display text for the current sort option
+  const getSortOptionText = (option: SortOption): string => {
+    switch (option) {
+      case "date-closest":
+        return "Newest First";
+      case "date-oldest":
+        return "Oldest First";
+      case "type":
+        return "By Role (Admin, Host, Member)";
+      default:
+        return "Sort";
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col p-8 bg-gray-900 text-white">
+    <div className="min-h-screen flex flex-col bg-gray-900 text-white -mt-1">
       <main className="flex-grow container mx-auto px-4 pt-0 pb-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 my-8">
           <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500">
             Your Parties
           </h1>
-          <Button
-            asChild
-            className="bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-medium py-2 px-6 rounded-full transition-all duration-200 shadow-lg hover:shadow-pink-500/20"
-          >
-            <Link href="/create-party" className="flex items-center gap-2">
-              <Plus size={18} />
-              Create New Party
-            </Link>
-          </Button>
+
+          <div className="flex items-center gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-full border border-gray-700 transition-colors duration-200">
+                <SortAsc size={16} className="text-pink-400" />
+                <span>{getSortOptionText(sortOption)}</span>
+                <ChevronDown size={14} className="text-gray-400" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-gray-800 border border-gray-700 text-gray-200 rounded-lg shadow-xl">
+                <DropdownMenuItem
+                  className="hover:bg-gray-700 focus:bg-gray-700 cursor-pointer"
+                  onClick={() => setSortOption("date-closest")}
+                >
+                  Closest Parties
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="hover:bg-gray-700 focus:bg-gray-700 cursor-pointer"
+                  onClick={() => setSortOption("date-oldest")}
+                >
+                  Oldest Parties
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="hover:bg-gray-700 focus:bg-gray-700 cursor-pointer"
+                  onClick={() => setSortOption("type")}
+                >
+                  By Role (Admin, Host, Member)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              asChild
+              className="bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-medium py-2 px-6 rounded-full transition-all duration-200 shadow-lg hover:shadow-pink-500/20"
+            >
+              <Link href="/create-party" className="flex items-center gap-2">
+                <Plus size={18} />
+                Create New Party
+              </Link>
+            </Button>
+          </div>
         </div>
 
-        {allParties.length === 0 ? (
+        {sortedParties.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <PartyPopper className="w-16 h-16 text-pink-500 mb-4" />
             <p className="text-gray-300 text-xl max-w-md">
@@ -108,7 +197,7 @@ export default function LoggedInPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allParties.map((party) => {
+            {sortedParties.map((party) => {
               const isAdmin = partiesAdmin.some((p) => p.id === party.id);
               const isHost = partiesHost.some((p) => p.id === party.id);
               const gradient = getRandomGradient();
